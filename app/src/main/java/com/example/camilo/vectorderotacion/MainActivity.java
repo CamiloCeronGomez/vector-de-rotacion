@@ -47,11 +47,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onPause();
         sensorManager.unregisterListener(this);
     }
+    // Accionado cuando los valores del sensor cambian
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
+        Float x = sensorEvent.values[0];
+        Float y = sensorEvent.values[1];
+        Float z = sensorEvent.values[2];
+        Float e = sensorEvent.values[3];
 
+
+        textViewX.setText("Valor en X: " + x.toString());
+        textViewY.setText("Valor en Y: " + y.toString());
+        textViewZ.setText("Valor en Z: " + z.toString());
+        textViewE.setText("Magnitud Escalar: " + e.toString());
     }
-
+    // Cuando hay un cambio en la presicion del sensor
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
 
