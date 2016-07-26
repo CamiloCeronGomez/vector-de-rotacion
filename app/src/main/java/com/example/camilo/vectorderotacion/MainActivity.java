@@ -35,6 +35,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         vectorRotacion = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
     }
 
+// Metodo para iniciar la captura del vector de rotacion
+    protected void onResume(){
+        super.onResume();
+        // El parametro SENSOR_DELAY_NORMAL define la velocidad de captura del sensor
+        sensorManager.registerListener(this, vectorRotacion, sensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    // Metodo para parar cuando no se esta interactuando con el susario, esto reduce el consumo de energia
+    protected void onPause() {
+        super.onPause();
+        sensorManager.unregisterListener(this);
+    }
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
 
