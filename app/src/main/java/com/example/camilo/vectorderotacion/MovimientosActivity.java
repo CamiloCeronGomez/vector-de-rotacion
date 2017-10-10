@@ -8,25 +8,51 @@ import android.hardware.SensorManager;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 
+import com.example.camilo.vectorderotacion.adapter.MovimientoAdapter;
+import com.example.camilo.vectorderotacion.db.MovimientoDao;
+import com.example.camilo.vectorderotacion.models.Movimiento;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
 
-public class MainActivity extends AppCompatActivity implements SensorEventListener {
+import java.util.ArrayList;
+import java.util.List;
+
+public class MovimientosActivity extends AppCompatActivity implements SensorEventListener {
 
     private TextView textViewX;
     private TextView textViewY;
     private TextView textViewZ;
     private TextView textViewE;
-    private int Azimuth = 0;
-    private int Pitch = 0;
-    private int Roll = 0;
+    private TextView iniciarAzimut;
+    private TextView finalAzimut;
+    private TextView rta;
+    private Button btniniciar;
+    private Button btnfinal;
+    private float respuesta ;
+    private float abs;
+    private float bbs;
+    private float Azimuth = 0;
+    private float maxA;
+    private float c = 0;
+    private float iAzimut;
+    private float Pitch = 0;
+    private float Roll = 0;
     float[] orientation = new float[3];
     float[] rMat = new float[9];
     private SensorManager sensorManager = null;
     private Sensor vectorRotacion;
+
+    ListView list;
+    MovimientoAdapter adapter;
+    List<Movimiento> data;
+    MovimientoDao dao;
+
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -37,12 +63,24 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_movimientos);
         // TextView para el vector de rotacion
         textViewX = (TextView) findViewById(R.id.txtViewX);
         textViewY = (TextView) findViewById(R.id.txtViewY);
         textViewZ = (TextView) findViewById(R.id.txtViewZ);
         textViewE = (TextView) findViewById(R.id.txtViewE);
+        iniciarAzimut = (TextView) findViewById(R.id.iniciarAzimut);
+        finalAzimut =(TextView) findViewById(R.id.finalAzimut);
+        rta = (TextView) findViewById(R.id.rta);
+
+        btniniciar = (Button) findViewById(R.id.btnIniciar);
+        btnfinal = (Button) findViewById(R.id.btnFinal);
+
+        list = (ListView)findViewById(R.id.list);
+        data = new ArrayList<>();
+
+        adapter = new MovimientoAdapter(getLayoutInflater(), data);
+        dao = new MovimientoDao(this);
 
         // Instancia de la clase SensorManager a traves del siguiente metodo
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -52,6 +90,31 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+        list.setAdapter(adapter);
+        loadMovimiento();
+
+    }
+
+    private void loadMovimiento() {
+        List<Movimiento> list = dao.getAll();
+        if(list.size()==0){
+            Movimiento primero = new Movimiento();
+            primero.setMfinal(35);
+            primero.setMfinal(35);
+
+            Movimiento segundo = new Movimiento();
+            segundo.setMinicial(28);
+            segundo.setMfinal(15);
+
+            dao.insert(primero);
+            dao.insert(segundo);
+
+            list = dao.getAll();
+       }
+        for (Movimiento m:list){
+            data.add(m);
+        }
+        adapter.notifyDataSetChanged();
     }
 
     // Metodo para iniciar la captura del vector de rotacion
@@ -79,14 +142,42 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 //Calcular la Matris de Rotacion
                 SensorManager.getRotationMatrixFromVector(rMat, event.values);
                 // Obtener el valor de Azimuth en Grados
-                Azimuth = (int) (Math.toDegrees(SensorManager.getOrientation(rMat, orientation)[0]) + 360) % 360;
-                Pitch = (int) (Math.toDegrees(SensorManager.getOrientation(rMat, orientation)[1]) + 360) % 360;
-                Roll = (int) (Math.toDegrees(SensorManager.getOrientation(rMat, orientation)[2]) + 360) % 360;
+                Azimuth = (float) (Math.toDegrees(SensorManager.getOrientation(rMat, orientation)[0]) ) ;
+                Pitch = (float) (Math.toDegrees(SensorManager.getOrientation(rMat, orientation)[1]) ) ;
+                Roll = (float) (Math.toDegrees(SensorManager.getOrientation(rMat, orientation)[2])) ;
 
+
+
+                btniniciar.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        iniciarAzimut.setText(" " + Azimuth);
+                        iAzimut = Azimuth;
+                    }
+                });
+                if (c == 0){
+                    c = iAzimut;
+                }else if (c < maxA){
+                    c = maxA;
+                }else {
+                    finalAzimut.setText(" "+ c);
+                }
+                if (Azimuth > iAzimut){
+                    maxA = Azimuth ;
+
+                }
+             //   btnfinal.setOnClickListener(new View.OnClickListener() {
+              //      @Override
+              //      public void onClick(View view) {
+              //          finalAzimut.setText(" " + Azimuth);
+              //      }
+             //   });
                 textViewX.setText("Posicion X: " + Azimuth);
                 textViewY.setText("Posicion Y: " + Pitch);
                 textViewZ.setText("Posicion Z: " + Roll);
 
+                respuesta = Math.abs(iAzimut) + Math.abs(c);
+                rta.setText(" "+ respuesta);
                 break;
 
         }
